@@ -1,0 +1,21 @@
+{
+  "name": "dwindle-js",
+  "version": "0.0.1",
+  "description": "A tool that looks through HTML, minifies all the JavaScript into a single file, and automatically replaces the script tags with the single file script tag",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "TrueWinter",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.10",
+    "clean-css": "^5.3.0",
+    "colors": "^1.4.0",
+    "uglify-js": "^3.15.4",
+    "yargs": "^17.4.1"
+  },
+  "bin": {
+    "dwindle-js": "bin/dwindle.js"
+  }
+}
