@@ -10,7 +10,7 @@ class DwindleJS {
 	#jsFileExtensions = ['.js'];
 	#cssFileExtensions = ['.css'];
 	#removeElementQueries = [];
-	#ignoredFileExtensions = ['.dwindle.js'];
+	#ignoredFileExtensions = ['.dwindle.js', '.dwindle.css'];
 	#ignoreJsStartsWith = ['//'];
 	#ignoreJsContains = ['://'];
 	#ignoreCssStartsWith = ['//'];
@@ -405,12 +405,13 @@ class DwindleJS {
 
 		var scripts = $('script[src]');
 		if (scripts.length !== 0) {
-			scripts.first().attr('src', `${this.#getRelativeDirectory(file)}${this.#jsOutputFileName}`);
+			scripts.first().before(`<script src="${this.#getRelativeDirectory(file)}${this.#jsOutputFileName}">`);
 
 			scripts.each((_, e) => {
 				if (e.attribs.src !== this.#jsOutputFileName) {
 					if (!this.#fileNameStartsWithIgnored(e.attribs.src, this.#ignoreJsStartsWith) &&
-							!this.#fileNameContainsIgnored(e.attribs.src, this.#ignoreJsContains)) {
+							!this.#fileNameContainsIgnored(e.attribs.src, this.#ignoreJsContains) &&
+							!this.#hasIgnoredExtension(e.attribs.src)) {
 						$(e).remove();
 					}
 				}
@@ -419,12 +420,13 @@ class DwindleJS {
 
 		var styles = $('link[rel="stylesheet"][href]');
 		if (styles.length !== 0) {
-			styles.first().attr('href', `${this.#getRelativeDirectory(file)}${this.#cssOutputFileName}`);
+			styles.first().before(`<link rel="stylesheet" href="${this.#getRelativeDirectory(file)}${this.#cssOutputFileName}">`);
 
 			styles.each((_, e) => {
 				if (e.attribs.href !== this.#cssOutputFileName) {
 					if (!this.#fileNameStartsWithIgnored(e.attribs.href, this.#ignoreCssStartsWith) &&
-							!this.#fileNameContainsIgnored(e.attribs.href, this.#ignoreCssContains)) {
+							!this.#fileNameContainsIgnored(e.attribs.href, this.#ignoreCssContains) &&
+							!this.#hasIgnoredExtension(e.attribs.href)) {
 						$(e).remove();
 					}
 				}

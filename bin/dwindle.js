@@ -248,7 +248,7 @@ function run(args) {
 		if (opt.length !== 0) {
 			console.log(colors.green(opt.join(' ')));
 		}
-		console.log(colors.green(`Saved JavaScript to ${dwindle.jsOutputFileName}, CSS to ${dwindle.cssOutputFileName} and replaced script tags in HTML files.`));
+		console.log(colors.green(`Saved JavaScript to ${dwindle.jsOutputFileName}, CSS to ${dwindle.cssOutputFileName} and replaced script/link tags in HTML files.`));
 	}).catch(err => {
 		console.error('Failed to run DwindleJS: ', err);
 	});
