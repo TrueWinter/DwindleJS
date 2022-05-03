@@ -8,7 +8,7 @@ DwindleJS is a JavaScript and CSS minifier that automatically updates the HTML f
 
 There are many minifiers and combiners available, so you might wonder why I wrote my own. Grunt supports this by using comments like `<!-- build:js scripts/combined.concat.min.js -->` around script tags, and other tools have ways of doing the same.
 
-Unfortunately, all of the tools I looked at had one thing in common: you had to know how the website is structed and where all the files are, or be able to add comments. Most of the time, this isn't an issue. But what if you're working with a tool that dynamically generates a static site (like a documentation tool such as JavaDoc)? In that case, using existing tools becomes challengingas you can't be sure what the output will be, where the files are, what files will be used, etc.
+Unfortunately, all of the tools I looked at had one thing in common: you had to know how the website is structed and where all the files are, or be able to add comments. Most of the time, this isn't an issue. But what if you're working with a tool that dynamically generates a static site (like a documentation tool such as JavaDoc)? In that case, using existing tools becomes challenging as you can't be sure what the output will be, where the files are, what files will be used, etc.
 
 That's why DwindleJS was made.
 
