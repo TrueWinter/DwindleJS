@@ -15,6 +15,9 @@
     "uglify-js": "^3.15.4",
     "yargs": "^17.4.1"
   },
+  "engines": {
+	  "node": ">=12"
+  },
   "bin": {
     "dwindle-js": "bin/dwindle.js"
   }
