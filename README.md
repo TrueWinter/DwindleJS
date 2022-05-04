@@ -143,3 +143,7 @@ Runs DwindleJS and returns a Promise.
 ## Command Line
 
 DwindleJS can also be used from the command line. Run `dwindle-js --help` for more information.
+
+## Requirements
+
+DwindleJS requires Node.js v12 or later.
