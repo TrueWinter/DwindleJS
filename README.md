@@ -107,11 +107,23 @@ See `get includeJs()`.
 ### set includeCss(array)
 See `set includeJs()`.
 
+### get dwindleJsPosition()
+Returns whether the DwindleJS JavaScript file will go before or after other scripts with an src attribute.
+
+### set dwindleJsPosition(position)
+Sets the DwindleJS JavaScript position. An error is thrown if the position is not either `before` or `after`. Default: `before`.
+
 ### get includeJsPosition()
 Returns whether the additional JavaScript will go before or after the JavaScript DwindleJS extracts.
 
 ### set includeJsPosition(position)
 Sets the additional JavaScript position. An error is thrown if the position is not either `before` or `after`. Default: `after`.
+
+### get dwindleCssPosition()
+See `get dwindleJsPosition()`.
+
+### set dwindleCssPosition(position)
+See `set dwindleJsPosition()`. Default: `before`.
 
 ### get includeCssPosition()
 See `get includeJsPosition()`.

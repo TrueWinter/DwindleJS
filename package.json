@@ -1,6 +1,6 @@
 {
   "name": "dwindle-js",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A tool that looks through HTML, minifies all the JavaScript into a single file, and automatically replaces the script tags with the single file script tag",
   "main": "index.js",
   "scripts": {
@@ -17,6 +17,10 @@
   },
   "engines": {
 	  "node": ">=12"
+  },
+  "repository": {
+	  "type": "git",
+	  "url": "https://github.com/TrueWinter/dwindle-js"
   },
   "bin": {
     "dwindle-js": "bin/dwindle.js"

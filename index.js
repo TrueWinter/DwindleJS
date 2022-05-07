@@ -17,6 +17,8 @@ class DwindleJS {
 	#ignoreCssContains = ['://'];
 	#includeJs = [];
 	#includeCss = [];
+	#dwindleJsPosition = 'before';
+	#dwindleCssPosition = 'before';
 	#includeJsPosition = 'after';
 	#includeCssPosition = 'after';
 	#uglifyJsOptions = {
@@ -213,6 +215,18 @@ class DwindleJS {
 		this.#includeCss = array;
 	}
 
+	get dwindleJsPosition() {
+		return this.#dwindleJsPosition;
+	}
+
+	set dwindleJsPosition(position) {
+		if (!['before', 'after'].includes(position)) {
+			throw new Error('Invalid option. Valid options are: before, after');
+		}
+
+		this.#dwindleJsPosition = position;
+	}
+
 	get includeJsPosition() {
 		return this.#includeJsPosition;
 	}
@@ -223,6 +237,18 @@ class DwindleJS {
 		}
 
 		this.#includeJsPosition = position;
+	}
+
+	get dwindleCssPosition() {
+		return this.#dwindleCssPosition;
+	}
+
+	set dwindleCssPosition(position) {
+		if (!['before', 'after'].includes(position)) {
+			throw new Error('Invalid option. Valid options are: before, after');
+		}
+
+		this.#dwindleCssPosition = position;
 	}
 
 	get includeCssPosition() {
@@ -405,7 +431,11 @@ class DwindleJS {
 
 		var scripts = $('script[src]');
 		if (scripts.length !== 0) {
-			scripts.first().before(`<script src="${this.#getRelativeDirectory(file)}${this.#jsOutputFileName}">`);
+			if (this.#dwindleJsPosition === 'before') {
+				scripts.first().before(`<script src="${this.#getRelativeDirectory(file)}${this.#jsOutputFileName}">`);
+			} else {
+				scripts.last().before(`<script src="${this.#getRelativeDirectory(file)}${this.#jsOutputFileName}">`);
+			}
 
 			scripts.each((_, e) => {
 				if (e.attribs.src !== this.#jsOutputFileName) {
@@ -420,7 +450,11 @@ class DwindleJS {
 
 		var styles = $('link[rel="stylesheet"][href]');
 		if (styles.length !== 0) {
-			styles.first().before(`<link rel="stylesheet" href="${this.#getRelativeDirectory(file)}${this.#cssOutputFileName}">`);
+			if (this.#dwindleCssPosition === 'before') {
+				styles.first().before(`<link rel="stylesheet" href="${this.#getRelativeDirectory(file)}${this.#cssOutputFileName}">`);
+			} else {
+				styles.last().before(`<link rel="stylesheet" href="${this.#getRelativeDirectory(file)}${this.#cssOutputFileName}">`);
+			}
 
 			styles.each((_, e) => {
 				if (e.attribs.href !== this.#cssOutputFileName) {

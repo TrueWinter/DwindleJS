@@ -62,12 +62,22 @@ yargs(hideBin(process.argv))
 			description: 'if a CSS tag\' href attribute contains one of these, it will be ignored',
 			type: 'array'
 		},
+		'dwindle-js-position': {
+			description: 'whether the DwindleJS JavaScript file should go before or after other script tags with an src attribute',
+			type: 'string',
+			nargs: 1
+		},
 		'include-js': {
 			description: 'if you want to add JavaScript to the output file that isn\'t already added by DwindleJS, add the absolute path here',
 			type: 'array'
 		},
 		'include-js-position': {
 			description: 'whether the included JavaScript should go before or after the other JavaScript',
+			type: 'string',
+			nargs: 1
+		},
+		'dwindle-css-position': {
+			description: 'whether the DwindleJS CSS file should go before or after other script tags with an src attribute',
 			type: 'string',
 			nargs: 1
 		},
@@ -177,6 +187,15 @@ function run(args) {
 		}
 	}
 
+	if (args['dwindle-js-position']) {
+		if (!['before', 'after'].includes(args['dwindle-js-position'])) {
+			console.error('The valid options for dwindle-js-position are: before, after');
+			process.exit(1);
+		}
+
+		dwindle.dwindleJsPosition = args['dwindle-js-position'];
+	}
+
 	if (args['include-js']) {
 		if (args['include-js'].length === 0) {
 			console.error('The include-js option requires at least one file');
@@ -198,6 +217,15 @@ function run(args) {
 		}
 
 		dwindle.includeJsPosition = args['include-js-position'];
+	}
+
+	if (args['dwindle-css-position']) {
+		if (!['before', 'after'].includes(args['dwindle-css-position'])) {
+			console.error('The valid options for dwindle-css-position are: before, after');
+			process.exit(1);
+		}
+
+		dwindle.dwindleCssPosition = args['dwindle-css-position'];
 	}
 
 	if (args['include-css']) {
