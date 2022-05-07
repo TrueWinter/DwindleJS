@@ -319,7 +319,13 @@ class DwindleJS {
 						filesToHandle.push(thisFile);
 
 						this.#extractScripts(thisFile).forEach(v => {
-							var p = path.join(thisFile, '..', path.sep, v);
+							var p;
+							if (v.startsWith('/')) {
+								p = path.join(this.#directory, path.sep, v);
+							} else {
+								p = path.join(thisFile, '..', path.sep, v);
+							}
+
 							if (!scripts.has(v) && !this.#hasIgnoredExtension(p)) {
 								if (fs.existsSync(p)) {
 									scripts.set(p, this.#getFileContent(p));
@@ -328,7 +334,13 @@ class DwindleJS {
 						});
 
 						this.#extractStyles(thisFile).forEach(v => {
-							var p = path.join(thisFile, '..', path.sep, v);
+							var p;
+							if (v.startsWith('/')) {
+								p = path.join(this.#directory, path.sep, v);
+							} else {
+								p = path.join(thisFile, '..', path.sep, v);
+							}
+
 							if (!styles.has(v) && !this.#hasIgnoredExtension(p)) {
 								if (fs.existsSync(p)) {
 									styles.set(p, this.#getFileContent(p));
