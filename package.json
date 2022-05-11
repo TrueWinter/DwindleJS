@@ -1,6 +1,6 @@
 {
   "name": "dwindle-js",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A tool that looks through HTML, minifies all the JavaScript into a single file, and automatically replaces the script tags with the single file script tag",
   "main": "index.js",
   "scripts": {
