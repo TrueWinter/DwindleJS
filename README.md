@@ -41,6 +41,12 @@ Returns the directory set. Throws an error of no directory has been set yet.
 ### set directory(directory)
 Sets the directory, which should be a string containing an absolute path to the directory the website is located in.
 
+### get outputDirectory()
+Returns the output directory. Returns null if not set.
+
+### set outputDirectory(directory)
+By default, DwindleJS will output the minified and combined files in the input directory. If you wish to change this, you can provide a directory relative to the input directory. This can only be set after the input directory is set.
+
 ### get htmlFileExtensions()
 What extensions should be considered HTML files, by default: `.htm` and `.html`.
 
@@ -64,6 +70,18 @@ Returns the queries that will be run when removing elements.
 
 ### set removeElementQueries(array)
 Sets the [Cheerio](https://npmjs.com/package/cheerio) queries that will determine which additional elements will be removed. This has no effect on the default removal of JavaScript and CSS elements. An error is thrown if the parameter is not an array.
+
+### get replacer()
+Returns the string or regex that will be replaced.
+
+### set replacer(replacer)
+Sets the string or regex that will be replaced. An error will be thrown if the replacer is not a string or RegExp.
+
+### get replaceWith()
+Returns string or regex that the replacer will be replaced with.
+
+### set replaceWith(replaceWith)
+Sets string or regex that the replacer will be replaced with. An error will be thrown if the replaceWith is not a string or RegExp.
 
 ### get ignoredFileExtensions()
 Sets the list of file extensions that will be ignored. This applies to HTML, JavaScript, and CSS files. Default: `.dwindle.js`, `.dwindle.css`.

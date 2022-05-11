@@ -10,6 +10,14 @@ class DwindleJS {
 	#jsFileExtensions = ['.js'];
 	#cssFileExtensions = ['.css'];
 	#removeElementQueries = [];
+	#replacer = new RegExp('$&');
+	#replaceWith = new RegExp('$&');
+	#replacerScope = 'dwindle';
+	#replacerAttributes = ['src', 'href'];
+	#replacerExtensions = ['.css', '.js'];
+	#replacerIgnoredExtensions = [];
+	#replacerIgnoreStartsWith = ['//'];
+	#replacerIgnoreContains = ['://'];
 	#ignoredFileExtensions = ['.dwindle.js', '.dwindle.css'];
 	#ignoreJsStartsWith = ['//'];
 	#ignoreJsContains = ['://'];
@@ -25,6 +33,7 @@ class DwindleJS {
 		toplevel: false
 	};
 	#directory = null;
+	#outputDirectory = null;
 	#jsOutputFileName = null;
 	#cssOutputFileName = null;
 
@@ -51,6 +60,34 @@ class DwindleJS {
 		}
 
 		this.#directory = directory;
+	}
+
+	get outputDirectory() {
+		return this.#outputDirectory;
+	}
+
+	set outputDirectory(directory) {
+		if (!directory) {
+			throw new Error('Output directory is required');
+		}
+
+		if (!this.#directory) {
+			throw new Error('Input directory must be set first');
+		}
+
+		if (path.isAbsolute(directory)) {
+			throw new Error('Output directory must be relative');
+		}
+
+		if (!fs.existsSync(path.join(this.#directory, path.sep, directory))) {
+			throw new Error('Output directory must exist');
+		}
+
+		if (!fs.lstatSync(path.join(this.#directory, path.sep, directory)).isDirectory()) {
+			throw new Error('Output directory must be a directory');
+		}
+
+		this.#outputDirectory = directory;
 	}
 
 	get htmlFileExtensions() {
@@ -99,6 +136,114 @@ class DwindleJS {
 		}
 
 		this.#removeElementQueries = array;
+	}
+
+	get replacer() {
+		return this.#replacer;
+	}
+
+	set replacer(replacer) {
+		if (!(replacer instanceof RegExp || typeof replacer === 'string')) {
+			throw new TypeError('Replacer must be a string or RegExp');
+		}
+
+		if (replacer instanceof RegExp) {
+			this.#replacer = new RegExp(replacer);
+		} else {
+			this.#replacer = replacer;
+		}
+	}
+
+	get replaceWith() {
+		return this.#replaceWith;
+	}
+
+	set replaceWith(replaceWith) {
+		if (!(replaceWith instanceof RegExp || typeof replaceWith === 'string')) {
+			throw new TypeError('Replacer must be a string or RegExp');
+		}
+
+		if (replaceWith instanceof RegExp) {
+			this.#replaceWith = new RegExp(replaceWith);
+		} else {
+			this.#replaceWith = replaceWith;
+		}
+	}
+
+	get replacerScope() {
+		return this.#replacerScope;
+	}
+
+	set replacerScope(scope) {
+		if (typeof scope !== 'string') {
+			throw new TypeError('Replacer scope must be a string');
+		}
+
+		if (!['dwindle', 'local'].includes(scope)) {
+			throw new Error('Replacer scope must be one of: dwindle, local');
+		}
+
+		this.#replacerScope = scope;
+	}
+
+	get replacerAttributes() {
+		return this.#replacerAttributes;
+	}
+
+	set replacerAttributes(attributes) {
+		if (!Array.isArray(attributes)) {
+			throw new TypeError('Extensions must be in an array');
+		}
+
+		this.#replacerAttributes = attributes;
+	}
+
+	get replacerExtensions() {
+		return this.#replacerExtensions;
+	}
+
+	set replacerExtensions(extensions) {
+		if (!Array.isArray(extensions)) {
+			throw new TypeError('Extensions must be in an array');
+		}
+
+		this.#replacerExtensions = extensions;
+	}
+
+	get replacerIgnoredExtensions() {
+		return this.#replacerIgnoredExtensions;
+	}
+
+	set replacerIgnoredExtensions(extensions) {
+		if (!Array.isArray(extensions)) {
+			throw new TypeError('Extensions must be in an array');
+		}
+
+		this.#replacerIgnoredExtensions = extensions;
+	}
+
+	get replacerIgnoreStartsWith() {
+		return this.#replacerIgnoreStartsWith;
+	}
+
+	set replacerIgnoreStartsWith(startsWith) {
+		if (!Array.isArray(startsWith)) {
+			throw new TypeError('Starts with must be in an array');
+		}
+
+		this.#replacerIgnoreStartsWith = startsWith;
+	}
+
+	get replacerIgnoreContains() {
+		return this.#replacerIgnoreContains;
+	}
+
+	set replacerIgnoreContains(contains) {
+		if (!Array.isArray(contains)) {
+			throw new TypeError('Contains must be in an array');
+		}
+
+		this.#replacerIgnoreContains = contains;
 	}
 
 	get ignoredFileExtensions() {
@@ -407,7 +552,8 @@ class DwindleJS {
 			// Just incase there's an empty src attribute
 			if (script.attribs.src &&
 				!this.#fileNameStartsWithIgnored(script.attribs.src, this.#ignoreJsStartsWith) &&
-				!this.#fileNameContainsIgnored(script.attribs.src, this.#ignoreJsContains)) {
+				!this.#fileNameContainsIgnored(script.attribs.src, this.#ignoreJsContains) &&
+				this.#hasSupportedJsExtension(script.attribs.src)) {
 				scripts.add(script.attribs.src);
 			}
 		});
@@ -425,7 +571,8 @@ class DwindleJS {
 			// Just incase there's an empty href attribute
 			if (style.attribs.href &&
 				!this.#fileNameStartsWithIgnored(style.attribs.href, this.#ignoreCssStartsWith) &&
-				!this.#fileNameContainsIgnored(style.attribs.href, this.#ignoreCssContains)) {
+				!this.#fileNameContainsIgnored(style.attribs.href, this.#ignoreCssContains) &&
+				this.#hasSupportedCssExtension(style.attribs.href)) {
 				styles.add(style.attribs.href);
 			}
 		});
@@ -443,14 +590,20 @@ class DwindleJS {
 
 		var scripts = $('script[src]');
 		if (scripts.length !== 0) {
+			var jsOutputFN = `${this.#getRelativeDirectory(file)}${this.#jsOutputFileName}`.replace(/\\/g, '/');
+
+			if (this.#replacerScope === 'dwindle' && !this.#hasIgnoredExtension(this.#jsOutputFileName, this.#replacerIgnoredExtensions)) {
+				jsOutputFN = jsOutputFN.replace(this.#replacer, this.#replaceWith);
+			}
+
 			if (this.#dwindleJsPosition === 'before') {
-				scripts.first().before(`<script src="${this.#getRelativeDirectory(file)}${this.#jsOutputFileName}">`);
+				scripts.first().before(`<script src="${jsOutputFN}">`);
 			} else {
-				scripts.last().before(`<script src="${this.#getRelativeDirectory(file)}${this.#jsOutputFileName}">`);
+				scripts.last().before(`<script src="${jsOutputFN}">`);
 			}
 
 			scripts.each((_, e) => {
-				if (e.attribs.src !== this.#jsOutputFileName) {
+				if (e.attribs.src !== jsOutputFN) {
 					if (!this.#fileNameStartsWithIgnored(e.attribs.src, this.#ignoreJsStartsWith) &&
 							!this.#fileNameContainsIgnored(e.attribs.src, this.#ignoreJsContains) &&
 							!this.#hasIgnoredExtension(e.attribs.src)) {
@@ -462,14 +615,20 @@ class DwindleJS {
 
 		var styles = $('link[rel="stylesheet"][href]');
 		if (styles.length !== 0) {
+			var cssOutputFN = `${this.#getRelativeDirectory(file)}${this.#cssOutputFileName}`.replace(/\\/g, '/');
+
+			if (this.#replacerScope === 'dwindle' && !this.#hasIgnoredExtension(this.#cssOutputFileName, this.#replacerIgnoredExtensions)) {
+				cssOutputFN = cssOutputFN.replace(this.#replacer, this.#replaceWith);
+			}
+
 			if (this.#dwindleCssPosition === 'before') {
-				styles.first().before(`<link rel="stylesheet" href="${this.#getRelativeDirectory(file)}${this.#cssOutputFileName}">`);
+				styles.first().before(`<link rel="stylesheet" href="${cssOutputFN}">`);
 			} else {
-				styles.last().before(`<link rel="stylesheet" href="${this.#getRelativeDirectory(file)}${this.#cssOutputFileName}">`);
+				styles.last().before(`<link rel="stylesheet" href="${cssOutputFN}">`);
 			}
 
 			styles.each((_, e) => {
-				if (e.attribs.href !== this.#cssOutputFileName) {
+				if (e.attribs.href !== cssOutputFN) {
 					if (!this.#fileNameStartsWithIgnored(e.attribs.href, this.#ignoreCssStartsWith) &&
 							!this.#fileNameContainsIgnored(e.attribs.href, this.#ignoreCssContains) &&
 							!this.#hasIgnoredExtension(e.attribs.href)) {
@@ -477,6 +636,22 @@ class DwindleJS {
 					}
 				}
 			});
+		}
+
+		if (this.#replacerScope === 'local') {
+			for (var j = 0; j < this.#replacerAttributes.length; j++) {
+				let thisAttr = this.#replacerAttributes[j];
+				var replacerElems = $(`*[${thisAttr}]`);
+
+				replacerElems.each((_, e) => {
+					if (this.#hasSupportedReplacerExtension(e.attribs[thisAttr]) &&
+							!this.#hasIgnoredExtension(e.attribs[thisAttr], this.#replacerIgnoredExtensions) &&
+							!this.#fileNameStartsWithIgnored(e.attribs[thisAttr], this.#replacerIgnoreStartsWith) &&
+							!this.#fileNameContainsIgnored(e.attribs[thisAttr], this.#replacerIgnoreContains)) {
+						$(e).attr(thisAttr, e.attribs[thisAttr].replace(this.#replacer, this.#replaceWith));
+					}
+				});
+			}
 		}
 
 		fs.writeFileSync(file, $.html(), 'utf8');
@@ -527,8 +702,16 @@ class DwindleJS {
 		return this.#fileNameContainsExtensionInArray(fileName, this.#jsFileExtensions);
 	}
 
-	#hasIgnoredExtension(fileName) {
-		return this.#fileNameContainsExtensionInArray(fileName, this.#ignoredFileExtensions);
+	#hasSupportedCssExtension(fileName) {
+		return this.#fileNameContainsExtensionInArray(fileName, this.#cssFileExtensions);
+	}
+
+	#hasSupportedReplacerExtension(fileName) {
+		return this.#fileNameContainsExtensionInArray(fileName, this.#replacerExtensions);
+	}
+
+	#hasIgnoredExtension(fileName, array = this.#ignoredFileExtensions) {
+		return this.#fileNameContainsExtensionInArray(fileName, array);
 	}
 
 	#fileNameContainsExtensionInArray(fileName, array) {
@@ -567,7 +750,11 @@ class DwindleJS {
 			return;
 		}
 
-		this.#jsOutputFileName = `all-${util.randomString(8)}.dwindle.js`;
+		if (!this.#outputDirectory) {
+			this.#jsOutputFileName = `all-${util.randomString(8)}.dwindle.js`;
+		} else {
+			this.#jsOutputFileName = path.join(this.#outputDirectory, path.sep, `all-${util.randomString(8)}.dwindle.js`);
+		}
 	}
 
 	#setOutputCssFileNameIfNull() {
@@ -575,7 +762,11 @@ class DwindleJS {
 			return;
 		}
 
-		this.#cssOutputFileName = `all-${util.randomString(8)}.dwindle.css`;
+		if (!this.#outputDirectory) {
+			this.#cssOutputFileName = `all-${util.randomString(8)}.dwindle.css`;
+		} else {
+			this.#cssOutputFileName = path.join(this.#outputDirectory, path.sep, `all-${util.randomString(8)}.dwindle.css`);
+		}
 	}
 
 	static get _version() {

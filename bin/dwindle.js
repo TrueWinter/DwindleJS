@@ -26,6 +26,11 @@ yargs(hideBin(process.argv))
 			nargs: 1,
 			demandOption: true
 		},
+		'output-dir': {
+			description: 'the directory DwindleJS will output to',
+			type: 'string',
+			nargs: 1
+		},
 		'html-file-extensions': {
 			description: 'a list of HTML file extensions',
 			type: 'array'
@@ -40,6 +45,49 @@ yargs(hideBin(process.argv))
 		},
 		'remove-element-queries': {
 			description: 'a Cheerio query for elements to remove from the HTML',
+			type: 'array'
+		},
+		replacer: {
+			description: 'a string or regex that will be replaced, use the replacer-regex flag to use regex',
+			type: 'string',
+			nargs: 1
+		},
+		'replacer-regex': {
+			description: 'whether to parse the replacer as regex',
+			type: 'boolean'
+		},
+		'replace-with': {
+			description: 'a string or regex that the replacer will be replaced with, use the replace-with-regex flag to use regex',
+			type: 'string',
+			nargs: 1
+		},
+		'replace-with-regex': {
+			description: 'whether to parse the replacer as regex',
+			type: 'boolean'
+		},
+		'replacer-scope': {
+			description: 'what elements should the replacer run on',
+			type: 'string',
+			nargs: 1
+		},
+		'replacer-attributes': {
+			description: 'what attributes should the replacer run on',
+			type: 'array'
+		},
+		'replacer-extensions': {
+			description: 'what extensions should the replacer run on',
+			type: 'array'
+		},
+		'replacer-ignored-extensions': {
+			description: 'what extensions should the replacer ignore',
+			type: 'array'
+		},
+		'replacer-ignore-starts-with': {
+			description: 'attribute values starting with any of these will be ignored',
+			type: 'array'
+		},
+		'replacer-ignore-contains': {
+			description: 'attribute values containing any of these will be ignored',
 			type: 'array'
 		},
 		'ignored-file-extensions': {
@@ -140,6 +188,90 @@ function run(args) {
 		} else {
 			dwindle.removeElementQueries = args['remove-element-queries'];
 		}
+	}
+
+	if (args.replacer) {
+		if (!args['replace-with']) {
+			console.error('replace-with must be set to use the replacer option');
+			process.exit(1);
+		}
+
+		if (args['replacer-regex']) {
+			var tmpReplacerRegex = new RegExp(args.replacer);
+			console.log(`Using replacer regex: ${tmpReplacerRegex}`);
+			dwindle.replacer = tmpReplacerRegex;
+		} else {
+			dwindle.replacer = args.replacer;
+		}
+	}
+
+	if (args.replaceWith) {
+		if (!args.replacer) {
+			console.error('replacer must be set to use the replace-with option');
+			process.exit(1);
+		}
+
+		if (args['replace-with-regex']) {
+			var tmpReplaceWithRegex = new RegExp(args.replaceWith);
+			console.log(`Using replace-with regex: ${tmpReplaceWithRegex}`);
+			dwindle.replaceWith = tmpReplaceWithRegex;
+		} else {
+			dwindle.replaceWith = args.replaceWith;
+		}
+	}
+
+	if (args['replacer-scope']) {
+		if (!['dwindle', 'local'].includes(args['replacer-scope'])) {
+			console.error('Valid options for replacer-scope are: dwindle, local');
+			process.exit(1);
+		}
+
+		dwindle.replacerScope = args['replacer-scope'];
+	}
+
+	if (args['replacer-attributes']) {
+		if (args['replacer-attributes'].length === 0) {
+			console.error('At least one attribute must be provided for replacer-attributes');
+			process.exit(1);
+		}
+
+		dwindle.replacerAttributes = args['replacer-attributes'];
+	}
+
+	if (args['replacer-extensions']) {
+		if (args['replacer-extensions'].length === 0) {
+			console.error('At least one extension must be provided for replacer-extensions');
+			process.exit(1);
+		}
+
+		dwindle.replacerExtensions = args['replacer-extensions'];
+	}
+
+	if (args['replacer-ignored-extensions']) {
+		if (args['replacer-ignored-extensions'].length === 0) {
+			console.error('At least one ignored extension must be provided for replacer-ignored-extensions');
+			process.exit(1);
+		}
+
+		dwindle.replacerIgnoredExtensions = args['replacer-ignored-extensions'];
+	}
+
+	if (args['replacer-ignore-starts-with']) {
+		if (args['replacer-ignore-starts-with'].length === 0) {
+			console.error('At least one replacer-ignore-starts-with must be provided');
+			process.exit(1);
+		}
+
+		dwindle.replacerIgnoreStartsWith = args['replacer-ignore-starts-with'];
+	}
+
+	if (args['replacer-ignore-contains']) {
+		if (args['replacer-ignore-contains'].length === 0) {
+			console.error('At least one replacer-ignore-contains must be provided');
+			process.exit(1);
+		}
+
+		dwindle.replacerIgnoreContains = args['replacer-ignore-contains'];
 	}
 
 	if (args['ignored-file-extensions']) {
@@ -261,6 +393,12 @@ function run(args) {
 	}
 
 	dwindle.directory = args.dir;
+
+	// This needs to be after the input directory is set
+	if (args['output-dir']) {
+		dwindle.outputDirectory = args['output-dir'];
+	}
+
 	dwindle.run().then(result => {
 		console.log(colors.green(`Looked through ${result.htmlFiles} HTML files. Found ${result.jsFiles} unique JavaScript files used, found ${result.cssFiles} unique CSS files used.`));
 		var opt = [];
