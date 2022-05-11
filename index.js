@@ -663,7 +663,7 @@ class DwindleJS {
 		var regex = new RegExp(`^\\${path.sep}`);
 		var f = file.replace(this.#directory, '').replace(regex, '').split(path.sep);
 
-		if (stat.isDirectory) {
+		if (stat.isDirectory()) {
 			// Remove just the directory
 			f = f.slice(0, -1);
 		} else if (stat.isFile()) {
